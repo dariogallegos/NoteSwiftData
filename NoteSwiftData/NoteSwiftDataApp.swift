@@ -48,7 +48,6 @@ struct NoteSwiftDataApp: App {
                                     Text($0.text).id($0)
                                 }
                             }
-                            
                         } label: {
                             Label(noteSortBy.text, image: "line.horizontal.3.decrease.circle")
                         }
