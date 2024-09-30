@@ -10,8 +10,8 @@ import SwiftData
 
 struct NoteListView: View {
     @Environment(\.modelContext) private var context
-    @Query(sort: \Note.createdAt, order: .reverse) var allNotes: [Note]
-    @Query(sort: \Tags.name, order: .forward) var allTags: [Tags]
+    @Query(sort: \NoteModel.createdAt, order: .reverse) var allNotes: [NoteModel]
+    @Query(sort: \TagModel.name, order: .forward) var allTags: [TagModel]
     @State var noteText = ""
     
     var body: some View {
@@ -83,7 +83,7 @@ struct NoteListView: View {
     }
     
     private func createNote() {
-        var tags: [Tags] = []
+        var tags: [TagModel] = []
         allTags.forEach { tag in
             if tag.isChecked {
                 tags.append(tag)
@@ -91,7 +91,7 @@ struct NoteListView: View {
             }
         }
         
-        let note = Note(id: UUID().uuidString, content: noteText, createdAt: .now, tags: tags)
+        let note = NoteModel(id: UUID().uuidString, content: noteText, createdAt: .now, tags: tags)
         context.insert(note)
         try? context.save()
         noteText = ""
