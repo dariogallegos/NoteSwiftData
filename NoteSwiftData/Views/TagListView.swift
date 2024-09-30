@@ -9,9 +9,14 @@ import SwiftUI
 import SwiftData
 
 struct TagListView: View {
-    @Environment(\.modelContext) private var context
-    @Query(sort: \Tags.name, order: .reverse) var allTags: [Tags]
-    @State var tagText = ""
+    @State var viewModel: TagListViewModel
+    //@Environment(\.modelContext) private var context
+    //@Query(sort: \TagModel.name, order: .reverse) var allTags: [TagModel]
+    @State private var tagText = ""
+    
+    init(viewModel: TagListViewModel) {
+        self.viewModel = viewModel
+    }
 
     var body: some View {
         List {
@@ -22,52 +27,43 @@ struct TagListView: View {
                         .autocorrectionDisabled()
                     
                     Button("Save") {
-                        createNote()
+                        viewModel.createTag(name: tagText)
+                        tagText = ""
                     }
                 }
             }
             
             Section {
-                if allTags.isEmpty {
+                if viewModel.allTags.isEmpty {
                     ContentUnavailableView("You don't have any tags yet", systemImage: "tag")
                 } else {
-                    ForEach(allTags) { tag in
-                        if let notes = tag.notes, notes.count > 0 {
-                            DisclosureGroup("\(tag.name) (\(notes.count))") {
+                    ForEach(viewModel.allTags) { tag in
+                        DisclosureGroup("\(tag.name)") {
+                            if let notes = tag.notes, notes.count > 0 {
                                 ForEach(notes) { note in
                                     Text(note.content)
                                 }
                                 .onDelete { indexSet in
                                     indexSet.forEach { index in
-                                        context.delete(notes[index])
+                                        viewModel.deleteNote(notes[index], from: tag)
                                     }
-                                    try? context.save()
                                 }
                             }
-                        } else {
-                            Text(tag.name)
                         }
                     }
                     .onDelete { indexSet in
                         indexSet.forEach { index in
-                            context.delete(allTags[index])
+                            viewModel.deleteTag(tag: viewModel.allTags[index])
                         }
-                        
-                        try? context.save()
                     }
                 }
             }
         }
     }
-    
-    private func createNote() {
-        let tag = Tags(id: UUID().uuidString, name: tagText)
-        context.insert(tag)
-        try? context.save()
-        tagText = ""
-    }
 }
 
 #Preview {
-    TagListView()
+    TagListView(
+        viewModel: TagListViewModel(repository: TagRepositoryTest())
+    )
 }
