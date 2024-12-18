@@ -17,8 +17,7 @@ public enum CurrentScheme: VersionedSchema {
     public static var models: [any PersistentModel.Type] {
         [
             TagModel.self,
-            NoteModel.self,
-            Item.self
+            NoteModel.self
         ]
     }
 }
