@@ -10,6 +10,7 @@ import SwiftData
 
 @main
 struct NoteSwiftDataApp: App {
+    let dataProvider = DataProvider.shared
     
     @State var noteSearchText = ""
     @State var noteSortBy = NoteSortBy.createdAt
@@ -17,8 +18,7 @@ struct NoteSwiftDataApp: App {
     
     @State var tagSearchText = ""
     @State var tarOrderBy = OrderBy.descending
-
-    
+    @State var tagViewModel = TagListViewModel(handler: TagHandler(modelContainer:DataProvider.shared.sharedModelContainer))
     
     var body: some Scene {
         WindowGroup {
@@ -28,15 +28,15 @@ struct NoteSwiftDataApp: App {
                 tagList
             }
         }
-        .modelContainer(for: [
-            Note.self,
-            Tags.self
-        ])
+        .modelContainer(dataProvider.sharedModelContainer)
     }
     
     private var noteList: some View {
         NavigationStack {
-            NoteListView()
+            NoteListView(
+                noteViewModel: NoteListViewModel(repository: NoteHandler(modelContainer: dataProvider.sharedModelContainer)),
+                tagViewModel: tagViewModel
+            )
                 .searchable(text: $noteSearchText, prompt: "Search")
                 .textInputAutocapitalization(.never)
                 .navigationTitle("Notes")
@@ -49,7 +49,7 @@ struct NoteSwiftDataApp: App {
                                 }
                             }
                         } label: {
-                            Label(noteSortBy.text, image: "line.horizontal.3.decrease.circle")
+                            Label(noteSortBy.text, systemImage: "line.3.horizontal.decrease.circle")
                         }
                     }
                 }
@@ -62,7 +62,7 @@ struct NoteSwiftDataApp: App {
     
     private var tagList: some View {
         NavigationStack {
-            TagListView()
+            TagListView(viewModel: tagViewModel)
                 .navigationTitle("Tags")
         }
         .tabItem {
