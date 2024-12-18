@@ -20,9 +20,10 @@ class TagModel {
     @Relationship(deleteRule: .nullify) var notes: [NoteModel]?
     @Attribute(.ephemeral) var isChecked = false
     
-    init(id: String, name: String) {
+    init(id: String, name: String, isChecked: Bool = false) {
         self.id = id
         self.name = name
+        self.isChecked = isChecked
     }
 }
 
@@ -30,11 +31,22 @@ class TagModel {
 struct Tag: Identifiable {
     let id: String
     let name: String
+    var isChecked: Bool
     let notes: [Note]?
     
-    init(id: String, name: String, notes: [Note]? = []) {
+    init(
+        id: String,
+        name: String,
+        isChecked: Bool = false,
+        notes: [Note]? = []
+    ) {
         self.id = id
         self.name = name
         self.notes = notes
+        self.isChecked = isChecked
+    }
+    
+    mutating func toogleCkeck() {
+        self.isChecked.toggle()
     }
 }

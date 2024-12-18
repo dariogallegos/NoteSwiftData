@@ -19,7 +19,7 @@ actor TagHandler {
     
     @discardableResult
     func newTag(_ tag: Tag) throws -> PersistentIdentifier {
-        let tagModel = TagModel(id: tag.id, name: tag.name)
+        let tagModel = TagModel(id: tag.id, name: tag.name, isChecked: tag.isChecked)
         modelContext.insert(tagModel)
         try modelContext.save()
         return tagModel.persistentModelID
@@ -27,7 +27,7 @@ actor TagHandler {
 
     func getAllTags() throws -> [Tag] {
         let tagsModel = try modelContext.fetch(FetchDescriptor<TagModel>())
-        return tagsModel.map { Tag(id: $0.id, name: $0.name) }
+        return tagsModel.map { Tag(id: $0.id, name: $0.name, isChecked: $0.isChecked) }
     }
     
     func delete(tag: Tag) throws {

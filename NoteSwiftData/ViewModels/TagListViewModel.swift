@@ -9,47 +9,53 @@ import Foundation
 
 @Observable
 final class TagListViewModel {
-    var allTags: [Tag]
+    var allTags: [Tag] = []
     
-    private let repository: DataTagRepository
+    private let handler: TagHandler
     
-    init(repository: DataTagRepository) {
-        self.repository = repository
-        do {
-            allTags = try repository.getTags()
-        } catch {
-            /// Error handling. For default, we set tags list to empty
-            allTags = []
-            print("debug: error \(error.localizedDescription)")
+    init(handler: TagHandler) {
+        self.handler = handler
+        Task {
+            await loadTags()
         }
     }
     
-    func createTag(name: String) {
+    func loadTags() async {
+        do {
+            let tags = try await handler.getAllTags()
+            DispatchQueue.main.async {
+                self.allTags = tags
+            }
+        } catch {
+            print("Error loading tags: \(error.localizedDescription)")
+        }
+    }
+    
+    func createTag(name: String) async {
         let tag = Tag(id: UUID().uuidString, name: name)
         do {
-            try repository.setTag(tag: tag)
-            allTags.append(tag)
+            try await handler.newTag(tag)
+            await loadTags()
         } catch {
-            print("debug: error \(error.localizedDescription)")
+            print("Error creating tag: \(error.localizedDescription)")
+        }
+    }
+
+    func deleteTag(tag: Tag) async {
+        do {
+            try await handler.delete(tag: tag)
+            await loadTags()
+        } catch {
+            print("Error deleting tag: \(error.localizedDescription)")
         }
     }
     
-    func deleteTag(tag: Tag) {
+    func checkedTag(tag: Tag) async {
+        let updatedTag = Tag(id: tag.id, name: tag.name, isChecked: !tag.isChecked, notes: tag.notes)
         do {
-            try repository.deleteTag(tag: tag)
-            allTags.removeAll { $0.id == tag.id }
+            try await handler.newTag(updatedTag)
+            await loadTags()
         } catch {
-            print("debug: error \(error.localizedDescription)")
-        }
-    }
-    
-    func deleteNote(_ note: Note, from tag: Tag) {
-        do {
-            try repository.deleteNoteFromTag(note: note, from: tag)
-            /// Actualizar las listas de tags y notas
-            allTags = try repository.getTags()
-        } catch {
-            print("debug: error \(error.localizedDescription)")
         }
     }
 }

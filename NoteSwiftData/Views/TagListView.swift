@@ -27,8 +27,11 @@ struct TagListView: View {
                         .autocorrectionDisabled()
                     
                     Button("Save") {
-                        viewModel.createTag(name: tagText)
-                        tagText = ""
+                        Task {
+                            await viewModel.createTag(name: tagText)
+                            tagText = ""
+                            UIApplication.shared.endEditing()
+                        }
                     }
                 }
             }
@@ -45,7 +48,7 @@ struct TagListView: View {
                                 }
                                 .onDelete { indexSet in
                                     indexSet.forEach { index in
-                                        viewModel.deleteNote(notes[index], from: tag)
+                                        //viewModel.deleteNote(notes[index], from: tag)
                                     }
                                 }
                             }
@@ -53,7 +56,9 @@ struct TagListView: View {
                     }
                     .onDelete { indexSet in
                         indexSet.forEach { index in
-                            viewModel.deleteTag(tag: viewModel.allTags[index])
+                            Task.detached {
+                                await viewModel.deleteTag(tag: viewModel.allTags[index])
+                            }
                         }
                     }
                 }
@@ -63,7 +68,7 @@ struct TagListView: View {
 }
 
 #Preview {
-    TagListView(
-        viewModel: TagListViewModel(repository: TagRepositoryTest())
-    )
+//    TagListView(
+//        viewModel: TagListViewModel(repository: TagRepositoryTest())
+//    )
 }
