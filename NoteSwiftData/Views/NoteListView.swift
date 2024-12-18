@@ -9,9 +9,8 @@ import SwiftUI
 import SwiftData
 
 struct NoteListView: View {
-    @Environment(\.modelContext) private var context
-    @Query(sort: \NoteModel.createdAt, order: .reverse) var allNotes: [NoteModel]
-    @Query(sort: \TagModel.name, order: .forward) var allTags: [TagModel]
+    @State var noteViewModel: NoteListViewModel
+    @State var tagViewModel: TagListViewModel
     @State var noteText = ""
     
     var body: some View {
@@ -23,12 +22,12 @@ struct NoteListView: View {
                         .autocorrectionDisabled()
                     
                     DisclosureGroup("Tag With") {
-                        if allTags.isEmpty {
+                        if tagViewModel.allTags.isEmpty {
                             Text("You don't have any tags yet. Please create one from Tags tab")
                                 .foregroundStyle(.gray)
                         }
                         
-                        ForEach (allTags) { tag in
+                        ForEach (tagViewModel.allTags) { tag in
                             HStack {
                                 Text(tag.name)
                                 
@@ -42,22 +41,26 @@ struct NoteListView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                tag.isChecked.toggle()
+                                Task {
+                                    await tagViewModel.checkedTag(tag: tag)
+                                }
                             }
                         }
                     }
                     
                     Button("Save") {
-                        createNote()
+                        noteViewModel.createNote(text: noteText, tags: [])
+                        noteText = ""
+                        UIApplication.shared.endEditing()
                     }
                 }
             }
             
             Section {
-                if allNotes.isEmpty {
+                if noteViewModel.allNotes.isEmpty {
                     ContentUnavailableView("You don't have any notes yet", systemImage: "note")
                 } else {
-                    ForEach(allNotes) { note in
+                    ForEach(noteViewModel.allNotes) {  note in
                         VStack(alignment: .leading) {
                             Text(note.content)
                             
@@ -66,38 +69,26 @@ struct NoteListView: View {
                                     .font(.caption)
                             }
                             
-                            Text(note.createdAt, style: .time)
+                            Text(note.createAt, style: .time)
                                 .font(.caption)
                         }
                     }
                     .onDelete { indexSet in
                         indexSet.forEach { index in
-                            context.delete(allNotes[index])
+                            noteViewModel.deleteNote(note: noteViewModel.allNotes[index])
                         }
-                        
-                        try? context.save()
                     }
                 }
             }
         }
-    }
-    
-    private func createNote() {
-        var tags: [TagModel] = []
-        allTags.forEach { tag in
-            if tag.isChecked {
-                tags.append(tag)
-                tag.isChecked = false
+        .onAppear {
+            Task.detached(priority: .medium) {
+                await noteViewModel.loadNotes()
             }
         }
-        
-        let note = NoteModel(id: UUID().uuidString, content: noteText, createdAt: .now, tags: tags)
-        context.insert(note)
-        try? context.save()
-        noteText = ""
     }
 }
 
-#Preview {
-    NoteListView()
-}
+//#Preview {
+//    NoteListView()
+//}

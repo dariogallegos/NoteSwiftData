@@ -8,10 +8,22 @@
 import Foundation
 import SwiftData
 
+protocol DataNoteHandler {
+    func newNote(_ note: Note) async throws
+    func getAllNotes() async throws -> [Note]
+    func delete(note: Note) async throws
+}
+
 @ModelActor
-actor NoteHandler {
-    @discardableResult
-    func newNote(_ note: Note) throws -> PersistentIdentifier {
+actor NoteHandler: DataNoteHandler {
+    @MainActor
+    init(modelContainer: ModelContainer, mainActor _: Bool) {
+        let modelContext = modelContainer.mainContext
+        modelExecutor = DefaultSerialModelExecutor(modelContext: modelContext)
+        self.modelContainer = modelContainer
+    }
+    
+    func newNote(_ note: Note) async throws {
         let noteModel = NoteModel(
             id: note.id,
             content: note.content,
@@ -21,15 +33,14 @@ actor NoteHandler {
         
         modelContext.insert(noteModel)
         try modelContext.save()
-        return noteModel.persistentModelID
     }
     
-    func getAllNotes() throws -> [Note] {
+    func getAllNotes() async throws -> [Note] {
         let notesModel = try modelContext.fetch(FetchDescriptor<NoteModel>())
         return notesModel.map { Note(id: $0.id, content: $0.content, createAt: $0.createdAt) }
     }
     
-    func delete(note: Note) throws {
+    func delete(note: Note) async throws {
         let noteModel = try modelContext
             .fetch(FetchDescriptor<NoteModel>())
             .first(where: { $0.id == note.id })

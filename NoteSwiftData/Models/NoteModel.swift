@@ -42,4 +42,12 @@ struct Note: Identifiable {
     let id: String
     let content: String
     let createAt: Date
+    let tags: [Tag]?
+    
+    init(id: String, content: String, createAt: Date, tags: [Tag]? = []) {
+        self.id = id
+        self.content = content
+        self.createAt = createAt
+        self.tags = tags
+    }
 }
