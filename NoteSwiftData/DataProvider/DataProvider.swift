@@ -21,10 +21,4 @@ final class DataProvider: Sendable {
          fatalError("Could not create ModelContainer: \(error)")
        }
      }()
-    
-    
-    public func dataHandlerCreator() -> @Sendable () async -> DataHandler {
-        let container = sharedModelContainer
-        return { DataHandler(modelContainer: container) }
-    }
 }
