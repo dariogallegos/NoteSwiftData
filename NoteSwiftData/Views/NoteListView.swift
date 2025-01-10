@@ -12,6 +12,7 @@ struct NoteListView: View {
     @State var noteViewModel: NoteListViewModel
     @State var tagViewModel: TagListViewModel
     @State var noteText = ""
+    @State var selectedTags: [Tag] = []
     
     var body: some View {
         List {
@@ -31,25 +32,43 @@ struct NoteListView: View {
                             HStack {
                                 Text(tag.name)
                                 
-                                if tag.isChecked {
+                                if selectedTags.contains(where: { $0.id == tag.id }) {
                                     Spacer()
                                     
                                     Image(systemName: "checkmark.circle")
                                         .symbolRenderingMode(.multicolor)
                                 }
+                                
+                                /*if tag.isChecked {
+                                    Spacer()
+                                    
+                                    Image(systemName: "checkmark.circle")
+                                        .symbolRenderingMode(.multicolor)
+                                }*/
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                Task {
-                                    await tagViewModel.checkedTag(tag: tag)
+                                /*Task {
+                                    // TODO: vamos a evitar guardar el estado en la base de datos, ya que es algo temporal por lo que el control lo vamos a hacer en las notas, para cada nota, y no a nivel de tag.
+                                    //await tagViewModel.checkedTag(tag: tag)
+                                }*/
+                                
+                                if selectedTags.contains(where: { $0.id == tag.id }) {
+                                    // si el tag esta dentro de la lista
+                                    selectedTags.removeAll(where: { $0.id == tag.id })
+                                } else {
+                                    // el tag no esta dentro de la lista, se añade
+                                    selectedTags.append(tag)
                                 }
                             }
                         }
                     }
                     
                     Button("Save") {
-                        noteViewModel.createNote(text: noteText, tags: [])
+                        // TODO: Aquí es donde tengo que relacionar las notas con las tags.
+                        noteViewModel.createNote(text: noteText, tags: selectedTags)
+                        selectedTags.removeAll()
                         noteText = ""
                         UIApplication.shared.endEditing()
                     }
@@ -89,6 +108,9 @@ struct NoteListView: View {
     }
 }
 
-//#Preview {
-//    NoteListView()
-//}
+#Preview {
+    NoteListView(
+        noteViewModel: NoteListViewModel(repository: NoteMockHandler()),
+        tagViewModel: TagListViewModel(handler: TagMockHandler())
+    )
+}

@@ -37,7 +37,20 @@ actor NoteHandler: DataNoteHandler {
     
     func getAllNotes() async throws -> [Note] {
         let notesModel = try modelContext.fetch(FetchDescriptor<NoteModel>())
-        return notesModel.map { Note(id: $0.id, content: $0.content, createAt: $0.createdAt) }
+        return notesModel
+            .map {
+                Note(
+                    id: $0.id,
+                    content: $0.content,
+                    createAt: $0.createdAt,
+                    tags: $0.tags?.compactMap {
+                        Tag(
+                            id: $0.id,
+                            name: $0.name
+                        )
+                    }
+                )
+            }
     }
     
     func delete(note: Note) async throws {

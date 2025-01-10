@@ -23,7 +23,7 @@ final class NoteListViewModel {
     func loadNotes() async {
         do {
             let notes = try await repository.getAllNotes()
-                self.allNotes = notes
+            self.allNotes = notes
         } catch {
             print("Error loading tags: \(error.localizedDescription)")
         }
@@ -41,21 +41,6 @@ final class NoteListViewModel {
         }
     }
 
-    //    private func createNote() {
-    //        var tags: [TagModel] = []
-    //        allTags.forEach { tag in
-    //            if tag.isChecked {
-    //                tags.append(tag)
-    //                tag.isChecked = false
-    //            }
-    //        }
-    //
-    //        let note = NoteModel(id: UUID().uuidString, content: noteText, createdAt: .now, tags: tags)
-    //        context.insert(note)
-    //        try? context.save()
-    //        noteText = ""
-    //    }
-    
     func deleteNote(note: Note) {
         Task {
             do {
