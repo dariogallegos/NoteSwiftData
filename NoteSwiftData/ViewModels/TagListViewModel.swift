@@ -11,9 +11,9 @@ import Foundation
 final class TagListViewModel {
     var allTags: [Tag] = []
     
-    private let handler: TagHandler
+    private let handler: DataTagHandler
     
-    init(handler: TagHandler) {
+    init(handler: DataTagHandler) {
         self.handler = handler
         Task {
             await loadTags()
@@ -56,6 +56,7 @@ final class TagListViewModel {
             try await handler.newTag(updatedTag)
             await loadTags()
         } catch {
+            print("Error checking tag: \(error.localizedDescription)")
         }
     }
 }

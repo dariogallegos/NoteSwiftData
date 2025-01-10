@@ -10,8 +10,6 @@ import SwiftData
 
 struct TagListView: View {
     @State var viewModel: TagListViewModel
-    //@Environment(\.modelContext) private var context
-    //@Query(sort: \TagModel.name, order: .reverse) var allTags: [TagModel]
     @State private var tagText = ""
     
     init(viewModel: TagListViewModel) {
@@ -41,18 +39,28 @@ struct TagListView: View {
                     ContentUnavailableView("You don't have any tags yet", systemImage: "tag")
                 } else {
                     ForEach(viewModel.allTags) { tag in
-                        DisclosureGroup("\(tag.name)") {
-                            if let notes = tag.notes, notes.count > 0 {
-                                ForEach(notes) { note in
-                                    Text(note.content)
-                                }
-                                .onDelete { indexSet in
-                                    indexSet.forEach { index in
-                                        //viewModel.deleteNote(notes[index], from: tag)
-                                    }
-                                }
+                        Button {
+                            Task {
+                                await viewModel.checkedTag(tag: tag)
                             }
+                        } label: {
+                            Text("\(tag.name)")
+                                .foregroundStyle(!tag.isChecked ? .blue : .green)
                         }
+
+                        
+//                        DisclosureGroup("\(tag.name)") {
+//                            if let notes = tag.notes, notes.count > 0 {
+//                                ForEach(notes) { note in
+//                                    Text(note.content)
+//                                }
+//                                .onDelete { indexSet in
+//                                    indexSet.forEach { index in
+//                                        //viewModel.deleteNote(notes[index], from: tag)
+//                                    }
+//                                }
+//                            }
+//                        }
                     }
                     .onDelete { indexSet in
                         indexSet.forEach { index in
@@ -68,7 +76,9 @@ struct TagListView: View {
 }
 
 #Preview {
-//    TagListView(
-//        viewModel: TagListViewModel(repository: TagRepositoryTest())
-//    )
+    TagListView(
+        viewModel: TagListViewModel(
+            handler: TagMockHandler()
+        )
+    )
 }
